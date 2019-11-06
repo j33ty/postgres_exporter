@@ -1,12 +1,15 @@
 pg_locks_mode:
   query: "WITH q_locks AS (select * from pg_locks where pid != pg_backend_pid() and database = (select oid from pg_database where datname = current_database())) SELECT (select current_database()) as datname,
-  lockmodes AS tag_lockmode, coalesce((select count(*) FROM q_locks WHERE mode = lockmodes), 0) AS count FROM
+  lockmodes AS tag_lockmode, (select locktype FROM q_locks WHERE mode = lockmodes) AS tag_locktype, coalesce((select count(*) FROM q_locks WHERE mode = lockmodes), 0) AS count FROM
   unnest('{AccessShareLock, ExclusiveLock, RowShareLock, RowExclusiveLock, ShareLock, ShareRowExclusiveLock,  AccessExclusiveLock, ShareUpdateExclusiveLock}'::text[]) lockmodes;"
   metrics:
     - datname:
         usage: "LABEL"
         description: "Database name"
     - tag_lockmode:
+        usage: "LABEL"
+        description: "Lock mode"
+    - tag_locktype:
         usage: "LABEL"
         description: "Lock type"
     - count:

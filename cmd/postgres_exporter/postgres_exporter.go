@@ -228,7 +228,8 @@ var builtinMetricMaps = map[string]intermediateMetricMap{
 	"pg_locks": {
 		map[string]ColumnMapping{
 			"datname": {LABEL, "Name of this database", nil, nil},
-			"mode":    {LABEL, "Type of Lock", nil, nil},
+			"mode":    {LABEL, "Name of lock mode", nil, nil},
+			"type":    {LABEL, "Type of locked object", nil, nil},
 			"count":   {GAUGE, "Number of locks", nil, nil},
 		},
 		0,
@@ -304,7 +305,7 @@ var queryOverrides = map[string][]OverrideQuery{
 	"pg_locks": {
 		{
 			semver.MustParseRange(">0.0.0"),
-			`SELECT pg_database.datname,tmp.mode,COALESCE(count,0) as count
+			`SELECT pg_database.datname,tmp.mode,tmp.locktype as type,COALESCE(count,0) as count
 			FROM
 				(
 				  VALUES ('accesssharelock'),
@@ -317,9 +318,9 @@ var queryOverrides = map[string][]OverrideQuery{
 				         ('accessexclusivelock')
 				) AS tmp(mode) CROSS JOIN pg_database
 			LEFT JOIN
-			  (SELECT database, lower(mode) AS mode,count(*) AS count
+			  (SELECT database, lower(mode) AS mode, locktype, count(*) AS count
 			  FROM pg_locks WHERE database IS NOT NULL
-			  GROUP BY database, lower(mode)
+			  GROUP BY database, lower(mode), locktype
 			) AS tmp2
 			ON tmp.mode=tmp2.mode and pg_database.oid = tmp2.database ORDER BY 1`,
 		},
