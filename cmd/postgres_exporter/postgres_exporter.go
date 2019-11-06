@@ -305,7 +305,7 @@ var queryOverrides = map[string][]OverrideQuery{
 	"pg_locks": {
 		{
 			semver.MustParseRange(">0.0.0"),
-			`SELECT pg_database.datname,tmp.mode,tmp.locktype as type,COALESCE(count,0) as count
+			`SELECT pg_database.datname,tmp.mode,tmp2.locktype as type,COALESCE(count,0) as count
 			FROM
 				(
 				  VALUES ('accesssharelock'),
